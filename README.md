@@ -1,14 +1,40 @@
 ## Welcome to Chan_SCCP
 
+> ### About this fork
+>
+> This is a **maintained fork** of [chan-sccp/chan-sccp](https://github.com/chan-sccp/chan-sccp),
+> the SCCP (Cisco Skinny) channel driver for Asterisk originally written and maintained by
+> Diederik de Groot, David Dederscheck and the Chan-SCCP contributors. **All credit for
+> chan_sccp belongs to them** -- this fork is a thin layer of version-compatibility work on
+> top of years of their effort.
+>
+> Upstream `develop` has not moved since **December 2023**, and its `configure.ac` still caps
+> support at Asterisk 13 (`MAX_ASTERISK_VERSION=113`) even though `ast114`-`ast119`
+> implementations are present in the tree. That makes it unbuildable against current
+> Asterisk without patching.
+>
+> This fork adds:
+> * **Asterisk 20 LTS** support (`ast120`)
+> * **Asterisk 21 and 22 LTS** support (`ast121`, `ast122`) -- including the `app_macro`
+>   removal in Asterisk 21, which makes an otherwise clean build fail at *module load*.
+>   See [Asterisk 21 / 22](#asterisk-21--22).
+> * an `acinclude.m4` fix so `./configure` survives a fresh `autoreconf`
+> * a recipe for [adding a new Asterisk version](#adding-support-for-a-new-asterisk-version)
+>
+> Verified on Asterisk 20.21.0 and 22.11.0 with Cisco 7925G handsets registering, placing
+> calls and passing two-way audio. Changes were offered upstream; upstream appears inactive.
+> If it becomes active again, these branches are intended to be merged back.
+>
+> Issues and pull requests for *this fork* belong here. Please direct thanks -- and
+> donations -- to the original project (links below).
+
+[![Build GH Status](https://github.com/russellmarine/chan-sccp/workflows/CI/badge.svg)](https://github.com/russellmarine/chan-sccp/actions?query=workflow%3ACI)
+[![Github Releases](https://img.shields.io/github/release/russellmarine/chan-sccp.svg)](https://github.com/russellmarine/chan-sccp/releases)
+[![Open issues](https://img.shields.io/github/issues/russellmarine/chan-sccp.svg)](https://github.com/russellmarine/chan-sccp/issues)
+
+Original project -- please support it:
+[![Upstream](https://img.shields.io/badge/upstream-chan--sccp%2Fchan--sccp-blue.svg)](https://github.com/chan-sccp/chan-sccp)
 [![Gitter](https://badges.gitter.im/chan-sccp/chan-sccp.svg)](https://gitter.im/chan-sccp/chan-sccp?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge)
-[![Build TR Status](http://img.shields.io/travis/chan-sccp/chan-sccp.svg?style=flat&branch=develop)](https://travis-ci.com/chan-sccp/chan-sccp)
-[![Build GH Status](https://github.com/chan-sccp/chan-sccp/workflows/CI/badge.svg)](https://github.com/chan-sccp/chan-sccp/actions?query=workflow%3ACI)
-[![Coverity](https://img.shields.io/coverity/scan/8656.svg)](https://scan.coverity.com/projects/chan-sccp)
-[![Language grade: C/C++](https://img.shields.io/lgtm/grade/cpp/g/chan-sccp/chan-sccp.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/chan-sccp/chan-sccp/context:cpp)
-[![Average time to resolve an issue](http://isitmaintained.com/badge/resolution/chan-sccp/chan-sccp.svg)](https://github.com/chan-sccp/chan-sccp/issues "Average time to resolve an issue")
-[![Percentage of issues still open](http://isitmaintained.com/badge/open/chan-sccp/chan-sccp.svg)](https://github.com/chan-sccp/chan-sccp/issues?utf8=✓&q=is%3Aopen+is%3Aissue+-label%3Aenhancement+ "Percentage of issues still open")
-[![Download Chan-SCCP channel driver for Asterisk](https://img.shields.io/sourceforge/dt/chan-sccp-b.svg)](https://github.com/chan-sccp/chan-sccp/releases/latest)
-[![Github Releases](https://img.shields.io/github/release/chan-sccp/chan-sccp.svg)](https://github.com/chan-sccp/chan-sccp/releases)
 [![Documentation](https://img.shields.io/badge/docs-wiki-blue.svg)](https://github.com/chan-sccp/chan-sccp/wiki)
 [![Donate](https://img.shields.io/badge/paypal-donate-yellow.svg)](https://www.paypal.com/cgi-bin/webscr?item_name=Donation+to+Chan-SCCP+channel+driver+for+Asterisk&locale.x=en_US&cmd=_donations&business=chan.sccp.b.pp%40gmail.com)
 [![Liberapay](https://img.shields.io/liberapay/receives/chan-sccp.svg?logo=liberapay)](https://liberapay.com/chan-sccp/donate).
@@ -24,6 +50,8 @@ For building and installation instructions please see the INSTALL file.
 * [Chat](#Chat)
 * [Quick Start](#Quick-Start)
   * [Prerequisites](#Prerequisites)
+  * [Asterisk 21 / 22](#asterisk-21--22)
+  * [Adding support for a new Asterisk version](#adding-support-for-a-new-asterisk-version)
   * [Building from source](#Building-from-source)
   * [Configuring](#Configuring)
   * [Build and Install](#Build-and-Install)
@@ -112,7 +140,8 @@ APIs show up.
 ### Building from source
 #### Using git (recommended)
 ##### Clone github repository (once)
-    git clone https://github.com/chan-sccp/chan-sccp.git chan-sccp
+    git clone https://github.com/russellmarine/chan-sccp.git chan-sccp
+    # upstream (unmaintained since 2023): https://github.com/chan-sccp/chan-sccp.git
     cd chan-sccp
 
 ##### Update to latest state
@@ -121,7 +150,7 @@ APIs show up.
     git pull
 
 #### Using Released tar.gz
-retrieve the tar.gz from [latest release](https://github.com/chan-sccp/chan-sccp/releases/latest) and save it to /tmp/chan-sccp_latest.tar.gz
+retrieve the tar.gz from [latest release](https://github.com/russellmarine/chan-sccp/releases/latest) and save it to /tmp/chan-sccp_latest.tar.gz
 
     mkdir chan-sccp
     cd chan-sccp
