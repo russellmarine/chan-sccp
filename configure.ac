@@ -7,7 +7,7 @@ AC_PREREQ([2.64])
 AC_INIT([Chan_SCCP],m4_esyscmd([cat .version |tr -d '\n']),[https://github.com/chan-sccp/chan-sccp/issues],[Chan_SCCP])
 
 MIN_ASTERISK_VERSION=106
-MAX_ASTERISK_VERSION=120
+MAX_ASTERISK_VERSION=122
 
 AC_CONFIG_AUX_DIR([autoconf])
 

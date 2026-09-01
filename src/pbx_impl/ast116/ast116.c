@@ -3081,10 +3081,23 @@ DECLARE_PBX_CHANNEL_STRGET(name)
     DECLARE_PBX_CHANNEL_STRGET(linkedid)
     DECLARE_PBX_CHANNEL_STRGET(context)
     DECLARE_PBX_CHANNEL_STRSET(context)
+#if defined(ASTERISK_CONF_1_21) || defined(ASTERISK_CONF_1_22)
+    /* Asterisk 21 removed the macro subsystem (app_macro). channel.h still DECLARES
+     * ast_channel_macroexten()/ast_channel_macrocontext(), so the old DECLARE_PBX_CHANNEL_*
+     * wrappers still compile cleanly -- but the symbols are no longer exported by the
+     * asterisk binary, so the module fails at load with "undefined symbol:
+     * ast_channel_macroexten". Provide inert stubs to keep the pbx interface struct
+     * complete. Macros do not exist on this Asterisk, so there is nothing to report. */
+    static const char *sccp_astwrap_get_channel_macroexten(constChannelPtr channel) { (void)channel; return ""; }
+    static void sccp_astwrap_set_channel_macroexten(constChannelPtr channel, const char *macroexten) { (void)channel; (void)macroexten; }
+    static const char *sccp_astwrap_get_channel_macrocontext(constChannelPtr channel) { (void)channel; return ""; }
+    static void sccp_astwrap_set_channel_macrocontext(constChannelPtr channel, const char *macrocontext) { (void)channel; (void)macrocontext; }
+#else
     DECLARE_PBX_CHANNEL_STRGET(macroexten)
     DECLARE_PBX_CHANNEL_STRSET(macroexten)
     DECLARE_PBX_CHANNEL_STRGET(macrocontext)
     DECLARE_PBX_CHANNEL_STRSET(macrocontext)
+#endif
     DECLARE_PBX_CHANNEL_STRGET(call_forward)
     DECLARE_PBX_CHANNEL_STRSET(call_forward)
 
