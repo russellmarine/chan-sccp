@@ -57,10 +57,57 @@ Make sure you have the following installed on your system:
   - libssl-dev / openssl-devel
 - pbx:
   - asterisk >= 11 (absolute minimum)
-  - asterisk 16, 18, or 20 LTS recommended
+  - asterisk 16, 18, 20 or 22 LTS recommended (21 also builds; see "Asterisk 21 / 22" below)
   - including source headers and debug symbols (asterisk-dev and asterisk-dbg / asterisk-devel and asterisk-debug-info)
   - chan_skinny module is prevented from loading in /etc/asterisk/modules.conf
 - standard posix compatible applications like sed, awk, tr
+
+### Asterisk 21 / 22
+
+Asterisk 21 and 22 are supported via `src/pbx_impl/ast121/` and `ast122/`, which -- like
+`ast120/` before them -- are symlink shims onto the `ast116/` implementation. The Asterisk
+channel API used by chan_sccp has been stable across 16 -> 22, so no separate implementation
+is needed.
+
+There is one behavioural difference worth knowing about:
+
+**The macro subsystem is gone.** Asterisk 21 removed `app_macro`, so
+`ast_channel_macroexten()` and `ast_channel_macrocontext()` no longer exist. Awkwardly,
+`channel.h` still *declares* both functions, so code calling them compiles perfectly
+cleanly and then fails at module load:
+
+    Error loading module 'chan_sccp.so': undefined symbol: ast_channel_macroexten
+
+chan_sccp therefore compiles those four `DECLARE_PBX_CHANNEL_STRGET/STRSET` wrappers only
+on Asterisk <= 20, and substitutes inert stubs on 21+. `getChannelMacroExten` and friends
+remain present on the pbx interface struct but return an empty string; there are no macros
+on these Asterisk versions, so there is nothing to report.
+
+If you are porting to a newer Asterisk yourself, note that **a clean compile is not
+sufficient evidence** that the module works. Always finish by confirming the module
+actually loads:
+
+    asterisk -rx "module show like sccp"
+
+### Adding support for a new Asterisk version
+
+The version directories are mechanical. To add `astNNN` (e.g. ast123 for Asterisk 23):
+
+1. `mkdir src/pbx_impl/astNNN` and symlink the implementation:
+   `ln -s ../ast116/ast116.c astNNN.c` and `ln -s ../ast116/ast116.h astNNN.h`
+2. Copy `Makefile.am` from an existing version directory, replacing the version number.
+   **Also copy `Makefile.in` the same way** -- automake cannot generate it, because
+   `AC_CONFIG_FILES` refers to `ast${ASTERISK_VER_GROUP}/Makefile`, a value only known at
+   configure time.
+3. Raise `MAX_ASTERISK_VERSION` in `configure.ac`.
+4. Add an `AC_DEFINE([ASTERISK_CONF_1_NN], ...)` case to `autoconf/asterisk.m4` -- there are
+   **two** switch statements and both need it.
+5. Add the matching `#ifdef ASTERISK_CONF_1_NN` include to `src/pbx_impl/ast/ast.h`.
+6. `autoreconf -fi`, then `./configure --with-asterisk-version=NN.M`, `make`, `make install`,
+   and confirm the module loads.
+
+Then fix whatever the loader complains about -- that, not the compiler, is where removed
+APIs show up.
 
 ### Building from source
 #### Using git (recommended)
